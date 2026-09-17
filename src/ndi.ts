@@ -717,7 +717,7 @@ export function getBufferStats(): { scriptureNonZero: number; songNonZero: numbe
 /**
  * Initialize NDI runtime library, create video senders, start browser renderer and streaming loop.
  */
-export async function initNdi(port = 8642): Promise<boolean> {
+export async function initNdi(port = 1000): Promise<boolean> {
     const libPath = findNdiLibrary();
     if (!libPath) {
         ndiError = "NDI runtime library not found on system";

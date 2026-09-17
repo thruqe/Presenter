@@ -26,8 +26,11 @@ import {
 } from "./ws";
 import { initNdi, getNdiStatus, shutdownNdi } from "./ndi";
 import type { CreateSongInput, BookSearchResult } from "./types";
+import QRCode from "qrcode";
 
-const PREFERRED_PORT = Number(process.env.PORT) || 8642;
+const PREFERRED_PORT = Number(process.env.PORT) || 1000;
+let activePort = PREFERRED_PORT;
+let lanIp: string | null = null;
 
 /**
  * Determine the machine's LAN-facing IPv4 address so other devices on the
@@ -101,6 +104,8 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
         response = new Response(Bun.file("public/song-output.html"));
     } else if (path === "/song-control") {
         response = new Response(Bun.file("public/song-control.html"));
+    } else if (path === "/qr") {
+        response = Response.redirect("/#qr", 302);
     } else if (path.startsWith("/fonts/")) {
         response = new Response(Bun.file("public" + path));
     }
@@ -204,6 +209,70 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
             song: songData,
         });
     }
+    // Network information & QR code generation endpoint
+    else if (path === "/api/network") {
+        const targetPath = url.searchParams.get("path") || "/";
+        const cleanPath = targetPath.startsWith("/") ? targetPath : `/${targetPath}`;
+        const host = lanIp || "localhost";
+        const networkUrl = `http://${host}:${activePort}${cleanPath}`;
+        const localUrl = `http://localhost:${activePort}${cleanPath}`;
+
+        let qrSvg = "";
+        try {
+            qrSvg = await QRCode.toString(networkUrl, {
+                type: "svg",
+                margin: 2,
+                color: {
+                    dark: "#000000",
+                    light: "#ffffff",
+                },
+            });
+        } catch (e) {
+            console.error("Failed to generate QR code SVG:", e);
+        }
+
+        response = Response.json({
+            lanIp,
+            port: activePort,
+            hasLan: lanIp !== null,
+            targetPath: cleanPath,
+            targetUrl: networkUrl,
+            localUrl,
+            qrSvg,
+            urls: {
+                control: `http://${host}:${activePort}/`,
+                songControl: `http://${host}:${activePort}/song-control`,
+                scriptureOutput: `http://${host}:${activePort}/output`,
+                songOutput: `http://${host}:${activePort}/song`,
+            },
+        });
+    }
+    // Direct QR SVG output route for image tags
+    else if (path === "/api/qr") {
+        const targetPath = url.searchParams.get("path") || "/";
+        const cleanPath = targetPath.startsWith("/") ? targetPath : `/${targetPath}`;
+        const host = lanIp || "localhost";
+        const networkUrl = `http://${host}:${activePort}${cleanPath}`;
+
+        try {
+            const qrSvg = await QRCode.toString(networkUrl, {
+                type: "svg",
+                margin: 2,
+                color: {
+                    dark: "#000000",
+                    light: "#ffffff",
+                },
+            });
+            response = new Response(qrSvg, {
+                headers: {
+                    "Content-Type": "image/svg+xml",
+                    "Cache-Control": "no-cache",
+                },
+            });
+        } catch {
+            response = new Response("Failed to generate QR code", { status: 500 });
+        }
+    }
     // Individual song endpoint matching /api/songs/:id
     else {
         const songMatch = path.match(/^\/api\/songs\/(\d+)$/);
@@ -253,27 +322,57 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
 /**
  * Initialize Bun server instance and configure routes + web sockets.
  */
-const server = Bun.serve({
-    port: PREFERRED_PORT,
-    hostname: "0.0.0.0",
-    fetch(req, srv) {
-        return handleFetch(req, srv);
-    },
-    websocket: {
-        open(ws: ServerWebSocket<unknown>) {
-            handleWsOpen(ws);
+let server: Bun.Server<unknown>;
+try {
+    server = Bun.serve({
+        port: PREFERRED_PORT,
+        hostname: "0.0.0.0",
+        fetch(req, srv) {
+            return handleFetch(req, srv);
         },
-        close(ws: ServerWebSocket<unknown>) {
-            handleWsClose(ws);
+        websocket: {
+            open(ws: ServerWebSocket<unknown>) {
+                handleWsOpen(ws);
+            },
+            close(ws: ServerWebSocket<unknown>) {
+                handleWsClose(ws);
+            },
+            message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
+                handleWsMessage(ws, message);
+            },
         },
-        message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
-            handleWsMessage(ws, message);
-        },
-    },
-});
+    });
+} catch (err: any) {
+    if (err?.code === "EACCES" && PREFERRED_PORT < 1024) {
+        console.warn(
+            `\x1b[33m[Warning] Binding to port ${PREFERRED_PORT} requires root privileges on Linux.\x1b[0m\n` +
+            `\x1b[33mFalling back to port 8642. (To run on port ${PREFERRED_PORT}, run with sudo or set unprivileged_port_start).\x1b[0m`
+        );
+        server = Bun.serve({
+            port: 8642,
+            hostname: "0.0.0.0",
+            fetch(req, srv) {
+                return handleFetch(req, srv);
+            },
+            websocket: {
+                open(ws: ServerWebSocket<unknown>) {
+                    handleWsOpen(ws);
+                },
+                close(ws: ServerWebSocket<unknown>) {
+                    handleWsClose(ws);
+                },
+                message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
+                    handleWsMessage(ws, message);
+                },
+            },
+        });
+    } else {
+        throw err;
+    }
+}
 
-const activePort = server.port ?? PREFERRED_PORT;
-const lanIp = getLocalIp();
+activePort = server.port ?? PREFERRED_PORT;
+lanIp = getLocalIp();
 
 // Initialize NDI video streaming engine for Scripture and Song outputs
 await initNdi(activePort);

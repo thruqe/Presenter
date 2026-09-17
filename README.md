@@ -112,7 +112,7 @@ Or with hot-reload during development:
 bun --watch src/index.ts
 ```
 
-The server starts on port `8642` by default and is accessible from any device on the same local network. It detects the machine's LAN IP automatically and prints the address on startup so you can open it from a phone, tablet, or projector on the same Wi-Fi.
+The server starts on port `1000` by default and is accessible from any device on the same local network. It detects the machine's LAN IP automatically and prints the address on startup so you can open it from a phone, tablet, or projector on the same Wi-Fi.
 
 ## Running with Docker
 

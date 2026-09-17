@@ -709,6 +709,203 @@
 				opacity: 1;
 				transform: translateX(-50%) translateY(0);
 			}
+
+			/* ── QR Connect Modal ───────────────────────────────── */
+			#qrNavTab {
+				border: none;
+				cursor: pointer;
+				font-family: inherit;
+			}
+			.qr-modal-backdrop {
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.75);
+				backdrop-filter: blur(6px);
+				-webkit-backdrop-filter: blur(6px);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				z-index: 99999;
+				padding: 20px;
+			}
+			.qr-modal-backdrop.open {
+				display: flex !important;
+			}
+			.qr-modal-card {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				box-shadow: 6px 6px 0 var(--border);
+				width: 100%;
+				max-width: 500px;
+				max-height: 90vh;
+				overflow-y: auto;
+				display: flex;
+				flex-direction: column;
+				transform: translateY(12px) scale(0.98);
+				transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+			}
+			.qr-modal-backdrop.open .qr-modal-card {
+				transform: translateY(0) scale(1);
+			}
+			.qr-modal-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 14px 18px;
+				border-bottom: 1px solid var(--border);
+				background: var(--surface-alt);
+			}
+			.qr-modal-title {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				font-size: 12px;
+				font-weight: 800;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+			}
+			.qr-modal-close {
+				background: transparent;
+				border: 1px solid transparent;
+				color: var(--text-muted);
+				font-size: 22px;
+				line-height: 1;
+				cursor: pointer;
+				padding: 2px 7px;
+				font-weight: 700;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.12s ease;
+			}
+			.qr-modal-close:hover {
+				color: var(--text);
+				border-color: var(--border);
+				background: var(--surface);
+			}
+			.qr-modal-body {
+				padding: 20px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 16px;
+			}
+			.qr-modal-desc {
+				font-size: 12px;
+				color: var(--text-muted);
+				line-height: 1.45;
+				text-align: center;
+			}
+			.qr-target-tabs {
+				display: flex;
+				background: var(--surface-alt);
+				border: 1px solid var(--border-soft);
+				padding: 3px;
+				gap: 3px;
+				width: 100%;
+				flex-wrap: wrap;
+			}
+			.qr-target-tab {
+				flex: 1 1 auto;
+				background: transparent;
+				border: none;
+				color: var(--text-muted);
+				font-size: 11px;
+				font-weight: 700;
+				padding: 6px 8px;
+				cursor: pointer;
+				font-family: inherit;
+				text-align: center;
+				transition: all 0.12s ease;
+			}
+			.qr-target-tab:hover {
+				color: var(--text);
+				background: var(--surface);
+			}
+			.qr-target-tab.active {
+				background: var(--text);
+				color: var(--bg);
+			}
+			.qr-code-box {
+				background: #ffffff;
+				padding: 14px;
+				border: 2px solid var(--border);
+				box-shadow: 4px 4px 0 var(--border);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 240px;
+				height: 240px;
+			}
+			.qr-code-box svg {
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.qr-url-row {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				width: 100%;
+				background: var(--surface-alt);
+				border: 1px solid var(--border);
+				padding: 6px 10px;
+			}
+			.qr-url-text {
+				flex: 1;
+				font-size: 12px;
+				font-weight: 700;
+				color: var(--text);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+			.qr-btn {
+				font-family: inherit;
+				font-size: 11px;
+				font-weight: 700;
+				padding: 5px 10px;
+				background: var(--text);
+				color: var(--bg);
+				border: 1px solid var(--border);
+				cursor: pointer;
+				text-decoration: none;
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				flex-shrink: 0;
+				transition: opacity 0.12s ease;
+			}
+			.qr-btn:hover {
+				opacity: 0.85;
+			}
+			.qr-status-info {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				width: 100%;
+				font-size: 12px;
+				color: var(--text-muted);
+				border-top: 1px solid var(--border-soft);
+				padding-top: 14px;
+			}
+			.qr-status-badge {
+				font-size: 10px;
+				font-weight: 800;
+				padding: 2px 7px;
+				border: 1px solid currentColor;
+				letter-spacing: 0.03em;
+			}
+			.qr-status-badge.online {
+				background: #10b981;
+				color: #ffffff;
+				border-color: #059669;
+			}
+			.qr-status-badge.local {
+				background: var(--surface-alt);
+				color: var(--text-muted);
+				border-color: var(--border-soft);
+			}
 		</style>
 	</head>
 	<body>
@@ -716,15 +913,31 @@
 			<div class="tag-left">
 				<span class="tag-new">LIVE</span>
 				<nav class="nav-switcher">
-					<a href="/" class="nav-link" title="Switch to Scripture Control (Alt+B)">
+					<a href="/" class="nav-link" id="scriptureTab" title="Switch to Scripture Control (Alt+B)">
 						<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
 						<span>Scripture</span>
 						<span class="switch-shortcut mono">Alt+B</span>
 					</a>
-					<a href="/song-control" class="nav-link active" title="Current: Song Control">
+					<a href="/song-control" class="nav-link active" id="songTab" title="Current: Song Control">
 						<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
 						<span>Song Control</span>
 					</a>
+					<button type="button" class="nav-link" id="qrNavTab" title="Network Remote QR Code (Alt+Q)">
+						<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+							<rect x="3" y="3" width="7" height="7"></rect>
+							<rect x="14" y="3" width="7" height="7"></rect>
+							<rect x="3" y="14" width="7" height="7"></rect>
+							<path d="M7 7h.01"></path>
+							<path d="M17 7h.01"></path>
+							<path d="M7 17h.01"></path>
+							<rect x="14" y="14" width="3" height="3" fill="currentColor"></rect>
+							<rect x="18" y="14" width="3" height="3" fill="currentColor"></rect>
+							<rect x="14" y="18" width="3" height="3" fill="currentColor"></rect>
+							<rect x="18" y="18" width="3" height="3" fill="currentColor"></rect>
+						</svg>
+						<span>QR Connect</span>
+						<span class="switch-shortcut mono">Alt+Q</span>
+					</button>
 				</nav>
 			</div>
 			<button
@@ -887,6 +1100,79 @@
 		</div>
 
 		<div id="toast"></div>
+
+		<!-- QR Connect Modal -->
+		<div class="qr-modal-backdrop" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+			<div class="qr-modal-card">
+				<div class="qr-modal-header">
+					<div class="qr-modal-title">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+							<rect x="3" y="3" width="7" height="7"></rect>
+							<rect x="14" y="3" width="7" height="7"></rect>
+							<rect x="3" y="14" width="7" height="7"></rect>
+							<path d="M7 7h.01"></path>
+							<path d="M17 7h.01"></path>
+							<path d="M7 17h.01"></path>
+							<rect x="14" y="14" width="3" height="3" fill="currentColor"></rect>
+							<rect x="18" y="14" width="3" height="3" fill="currentColor"></rect>
+							<rect x="14" y="18" width="3" height="3" fill="currentColor"></rect>
+							<rect x="18" y="18" width="3" height="3" fill="currentColor"></rect>
+						</svg>
+						<span id="qrModalTitle">Network Remote Access</span>
+					</div>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<span id="qrLanBadge" class="qr-status-badge online mono">Detecting…</span>
+						<button type="button" class="qr-modal-close" id="qrCloseBtn" aria-label="Close QR Modal">&times;</button>
+					</div>
+				</div>
+				<div class="qr-modal-body">
+					<p class="qr-modal-desc">
+						Scan this QR code with any phone, tablet, or external device on the same Wi-Fi network to operate Presenter wirelessly.
+					</p>
+
+					<!-- Destination Tabs -->
+					<div class="qr-target-tabs">
+						<button type="button" class="qr-target-tab" data-path="/">Scripture Control</button>
+						<button type="button" class="qr-target-tab active" data-path="/song-control">Song Control</button>
+						<button type="button" class="qr-target-tab" data-path="/output">Scripture Output</button>
+						<button type="button" class="qr-target-tab" data-path="/song">Song Output</button>
+					</div>
+
+					<!-- QR Display Box -->
+					<div class="qr-code-box" id="qrCodeContainer">
+						<div class="qr-loading mono" style="font-size:12px;color:var(--text-muted);">Loading QR…</div>
+					</div>
+
+					<!-- URL & Action Row -->
+					<div class="qr-url-row">
+						<span class="qr-url-text mono" id="qrUrlDisplay">http://localhost:1000/song-control</span>
+						<button type="button" class="qr-btn" id="qrCopyBtn" title="Copy URL to clipboard">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+							<span>Copy</span>
+						</button>
+						<a href="#" target="_blank" class="qr-btn" id="qrOpenBtn" title="Open in new window">
+							<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+							<span>Open</span>
+						</a>
+					</div>
+
+					<!-- Connection Tips -->
+					<div class="qr-status-info">
+						<div style="display:flex; justify-content:space-between; align-items:center;">
+							<span style="font-weight:700;">Wi-Fi / LAN IP:</span>
+							<span id="qrLanIpVal" class="mono" style="color:var(--text); font-weight:700;">-</span>
+						</div>
+						<div style="display:flex; justify-content:space-between; align-items:center;">
+							<span style="font-weight:700;">Server Port:</span>
+							<span id="qrPortVal" class="mono" style="color:var(--text); font-weight:700;">1000</span>
+						</div>
+						<div style="font-size:11px; margin-top:4px; opacity:0.8;">
+							Ensure the remote phone or tablet is connected to the same Wi-Fi router or hotspot as this machine.
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<script>
 			/* ── Theme (auto/light/dark, matches control.html) ─── */
@@ -1390,10 +1676,21 @@
 			// Global hotkeys
 			window.addEventListener("keydown", (e) => {
 				if (e.key === "Escape") {
-					clearSong();
+					if (qrModal && qrModal.classList.contains("open")) {
+						closeQrModal();
+					} else {
+						clearSong();
+					}
 				} else if (e.altKey && (e.key === "b" || e.key === "B")) {
 					e.preventDefault();
 					window.location.href = "/";
+				} else if (e.altKey && (e.key === "q" || e.key === "Q")) {
+					e.preventDefault();
+					if (qrModal && qrModal.classList.contains("open")) {
+						closeQrModal();
+					} else {
+						openQrModal();
+					}
 				}
 			});
 
@@ -1436,6 +1733,141 @@
 			setInterval(checkNdi, 5000);
 			syncInitialOutputStatus();
 			loadSongs();
+
+			// ── QR Code Remote Access Modal ──────────────────────
+			const qrNavTab = document.getElementById("qrNavTab");
+			const qrModal = document.getElementById("qrModal");
+			const qrCloseBtn = document.getElementById("qrCloseBtn");
+			const qrCodeContainer = document.getElementById("qrCodeContainer");
+			const qrUrlDisplay = document.getElementById("qrUrlDisplay");
+			const qrCopyBtn = document.getElementById("qrCopyBtn");
+			const qrOpenBtn = document.getElementById("qrOpenBtn");
+			const qrLanBadge = document.getElementById("qrLanBadge");
+			const qrLanIpVal = document.getElementById("qrLanIpVal");
+			const qrPortVal = document.getElementById("qrPortVal");
+			const qrTargetTabs = document.querySelectorAll(".qr-target-tab");
+
+			let currentQrPath = "/song-control";
+			let qrNetworkData = null;
+
+			async function loadQrCode(path = currentQrPath) {
+				currentQrPath = path;
+				try {
+					const res = await fetch(`/api/network?path=${encodeURIComponent(path)}`);
+					qrNetworkData = await res.json();
+					if (qrNetworkData) {
+						if (qrNetworkData.qrSvg) {
+							qrCodeContainer.innerHTML = qrNetworkData.qrSvg;
+						}
+						const activeUrl = qrNetworkData.targetUrl || qrNetworkData.localUrl;
+						qrUrlDisplay.textContent = activeUrl;
+						qrOpenBtn.href = activeUrl;
+						qrLanIpVal.textContent = qrNetworkData.lanIp || "None (Local only)";
+						qrPortVal.textContent = qrNetworkData.port || "1000";
+
+						if (qrNetworkData.hasLan) {
+							qrLanBadge.className = "qr-status-badge online mono";
+							qrLanBadge.textContent = `LAN ONLINE (${qrNetworkData.lanIp})`;
+						} else {
+							qrLanBadge.className = "qr-status-badge local mono";
+							qrLanBadge.textContent = "LOCALHOST ONLY";
+						}
+					}
+				} catch (_) {
+					qrCodeContainer.innerHTML = '<div class="mono" style="color:var(--danger);font-size:11px;">Failed to load QR</div>';
+				}
+			}
+
+			function openQrModal(defaultPath) {
+				const modal = document.getElementById("qrModal");
+				const tab = document.getElementById("qrNavTab");
+				if (!modal) return;
+
+				if (defaultPath) {
+					currentQrPath = defaultPath;
+				}
+				document.querySelectorAll(".qr-target-tab").forEach((t) => {
+					t.classList.toggle("active", t.dataset.path === currentQrPath);
+				});
+
+				if (tab) tab.classList.add("active");
+				modal.classList.add("open");
+				modal.style.display = "flex";
+				loadQrCode(currentQrPath);
+			}
+
+			function closeQrModal() {
+				const modal = document.getElementById("qrModal");
+				const tab = document.getElementById("qrNavTab");
+				if (!modal) return;
+
+				modal.classList.remove("open");
+				modal.style.display = "none";
+				if (tab) tab.classList.remove("active");
+				if (window.location.hash === "#qr") {
+					history.replaceState(null, "", window.location.pathname + window.location.search);
+				}
+			}
+
+			if (qrNavTab) {
+				qrNavTab.addEventListener("click", (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					if (qrModal && (qrModal.classList.contains("open") || qrModal.style.display === "flex")) {
+						closeQrModal();
+					} else {
+						openQrModal();
+					}
+				});
+			}
+
+			if (qrCloseBtn) {
+				qrCloseBtn.addEventListener("click", (e) => {
+					e.preventDefault();
+					closeQrModal();
+				});
+			}
+
+			if (qrModal) {
+				qrModal.addEventListener("click", (e) => {
+					if (e.target === qrModal) {
+						closeQrModal();
+					}
+				});
+			}
+
+			if (qrCopyBtn) {
+				qrCopyBtn.addEventListener("click", async () => {
+					const url = qrUrlDisplay ? qrUrlDisplay.textContent : "";
+					try {
+						await navigator.clipboard.writeText(url);
+						showToast("URL copied to clipboard!");
+					} catch (_) {
+						const input = document.createElement("input");
+						input.value = url;
+						document.body.appendChild(input);
+						input.select();
+						document.execCommand("copy");
+						document.body.removeChild(input);
+						showToast("URL copied to clipboard!");
+					}
+				});
+			}
+
+			qrTargetTabs.forEach((tab) => {
+				tab.addEventListener("click", () => {
+					qrTargetTabs.forEach((t) => t.classList.remove("active"));
+					tab.classList.add("active");
+					loadQrCode(tab.dataset.path);
+				});
+			});
+
+			// Pre-fetch QR code so it renders immediately
+			loadQrCode(currentQrPath);
+
+			if (window.location.hash === "#qr" || new URLSearchParams(window.location.search).get("tab") === "qr") {
+				openQrModal();
+			}
 		</script>
 	</body>
 </html>

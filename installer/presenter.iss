@@ -80,7 +80,7 @@ Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon; Comment: "Launch Presenter Desktop Controller"
 Name: "{group}\{#MyAppName} Server (Console)"; Filename: "{app}\{#MyAppServerExeName}"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon; Comment: "Launch Presenter Web & NDI Server in Terminal"
-Name: "{group}\{#MyAppName} Web Control"; Filename: "http://localhost:8642/"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon; Comment: "Open Presenter in Web Browser"
+Name: "{group}\{#MyAppName} Web Control"; Filename: "http://localhost:1000/"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon; Comment: "Open Presenter in Web Browser"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon; Comment: "Launch Presenter"
 

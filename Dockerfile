@@ -10,9 +10,9 @@ COPY src ./src
 COPY public ./public
 COPY db ./db
 
-EXPOSE 8642
+EXPOSE 1000
 
-ENV PORT=8642
+ENV PORT=1000
 ENV NODE_ENV=production
 
 CMD ["bun", "run", "src/index.ts"]

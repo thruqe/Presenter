@@ -2,6 +2,8 @@
  * Database models and type definitions for Scripture and Song modules.
  */
 
+export type BibleVersion = "kjv" | "amp";
+
 /**
  * Bible verse record schema matching the database table.
  */
@@ -11,6 +13,7 @@ export interface VerseRecord {
     chapter: number;
     verse: number;
     text: string;
+    version?: BibleVersion;
 }
 
 /**

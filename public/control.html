@@ -139,6 +139,54 @@
 				border: 1px solid currentColor;
 			}
 
+			.trans-switcher {
+				display: inline-flex;
+				align-items: center;
+				background: var(--surface-alt);
+				border: 1px solid var(--border);
+				padding: 2px;
+				gap: 2px;
+			}
+
+			.trans-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				padding: 6px 12px;
+				font-size: 12px;
+				font-weight: 700;
+				letter-spacing: 0.02em;
+				color: var(--text-muted);
+				background: transparent;
+				border: none;
+				cursor: pointer;
+				font-family: inherit;
+				transition:
+					background 0.12s ease,
+					color 0.12s ease;
+			}
+			.trans-btn:hover {
+				color: var(--text);
+				background: var(--surface);
+			}
+			.trans-btn.active {
+				background: var(--text);
+				color: var(--bg);
+			}
+
+			.trans-pill {
+				display: inline-block;
+				font-size: 9px;
+				font-weight: 800;
+				padding: 1px 5px;
+				border: 1px solid var(--border-soft);
+				background: var(--surface-alt);
+				color: var(--text-muted);
+				margin-right: 6px;
+				letter-spacing: 0.04em;
+				vertical-align: middle;
+			}
+
 			/* ── Two-Column Layout ──────────────────────────────── */
 			.control-grid {
 				display: grid;
@@ -850,6 +898,17 @@
 							<span class="switch-shortcut mono">Alt+Q</span>
 						</button>
 					</nav>
+
+					<!-- BIBLE TRANSLATION SWITCHER -->
+					<div class="trans-switcher" role="group" aria-label="Bible Translation (Alt+T)">
+						<button type="button" class="trans-btn active" id="transKjvBtn" data-version="kjv" title="Switch to King James Version (KJV)">
+							<span>KJV</span>
+						</button>
+						<button type="button" class="trans-btn" id="transAmpBtn" data-version="amp" title="Switch to Amplified Bible (AMP)">
+							<span>Amplified</span>
+						</button>
+						<span class="switch-shortcut mono">Alt+T</span>
+					</div>
 				</div>
 				<button
 					class="theme-toggle"
@@ -908,6 +967,9 @@
 							<span class="live-dot" id="liveDot"></span>
 							<span>Live: <b id="current-book-name">Nothing selected</b></span>
 						</div>
+						<div class="status-right" style="display: flex; align-items: center; gap: 8px;">
+							<span id="transBadge" class="mono" style="font-size: 10px; font-weight: 800; padding: 2px 7px; border: 1px solid var(--border); background: var(--surface-alt); color: var(--text);">KJV</span>
+						</div>
 					</div>
 
 					<div id="results">
@@ -929,6 +991,7 @@
 						<span><kbd>↑</kbd><kbd>↓</kbd>Preview</span>
 						<span><kbd>Enter</kbd>Send to output</span>
 						<span><kbd>Esc</kbd>Clear output</span>
+						<span><kbd>Alt+T</kbd>Translation</span>
 						<span><kbd>Alt+S</kbd>Songs</span>
 						<span><kbd>Alt+Q</kbd>QR Connect</span>
 					</div>
@@ -1141,6 +1204,44 @@
 			const ndiText = document.getElementById("ndiText");
 			const songStatusPill = document.getElementById("songStatusPill");
 
+			const transKjvBtn = document.getElementById("transKjvBtn");
+			const transAmpBtn = document.getElementById("transAmpBtn");
+			const transBadge = document.getElementById("transBadge");
+
+			let currentVersion = localStorage.getItem("scripture_version") || "kjv";
+
+			function setVersion(ver, updateUiOnly = false) {
+				currentVersion = ver === "amp" ? "amp" : "kjv";
+				localStorage.setItem("scripture_version", currentVersion);
+
+				if (transKjvBtn) transKjvBtn.classList.toggle("active", currentVersion === "kjv");
+				if (transAmpBtn) transAmpBtn.classList.toggle("active", currentVersion === "amp");
+				if (transBadge) transBadge.textContent = currentVersion.toUpperCase();
+
+				if (updateUiOnly) return;
+
+				// If there's an ongoing search, re-run with new translation
+				const q = searchEl.value;
+				if (q && q.trim()) {
+					doSearch(q);
+				}
+
+				// If a verse is currently staged, fetch and preview corresponding verse in new translation
+				if (stagedVerse && stagedVerse.book && stagedVerse.chapter && stagedVerse.verse) {
+					fetch(`/api/verse?book=${encodeURIComponent(stagedVerse.book)}&chapter=${stagedVerse.chapter}&verse=${stagedVerse.verse}&v=${currentVersion}`)
+						.then((res) => res.json())
+						.then((row) => {
+							if (row && row.text) {
+								updatePreview(row);
+							}
+						})
+						.catch(() => {});
+				}
+			}
+
+			if (transKjvBtn) transKjvBtn.addEventListener("click", () => setVersion("kjv"));
+			if (transAmpBtn) transAmpBtn.addEventListener("click", () => setVersion("amp"));
+
 			let ws = null;
 			let reconnectTimer = null;
 			const messageQueue = [];
@@ -1154,10 +1255,11 @@
 			function updatePreview(row) {
 				if (row && row.text) {
 					stagedVerse = row;
+					const verStr = (row.version || currentVersion).toUpperCase();
 					const ref = `${row.book} ${row.chapter}:${row.verse}`;
-					previewRefBadge.textContent = ref;
+					previewRefBadge.textContent = `${ref} · ${verStr}`;
 					previewText.textContent = row.text;
-					previewRef.textContent = ref;
+					previewRef.textContent = `${ref} (${verStr})`;
 					previewScreenContent.style.display = "block";
 					previewPlaceholder.style.display = "none";
 				} else {
@@ -1170,11 +1272,12 @@
 
 			function updateLiveScreen(data) {
 				if (data && data.text && data.book && data.chapter && data.verse) {
+					const verStr = data.version ? ` (${String(data.version).toUpperCase()})` : "";
 					currentRef = `${data.book} ${data.chapter}:${data.verse}`;
-					currentBookEl.textContent = currentRef;
+					currentBookEl.textContent = `${currentRef}${verStr}`;
 					liveDot.classList.add("on");
 					liveText.textContent = data.text;
-					liveRef.textContent = currentRef;
+					liveRef.textContent = `${currentRef}${verStr}`;
 					liveScreenContent.style.display = "block";
 					livePlaceholder.style.display = "none";
 
@@ -1362,7 +1465,7 @@
 				}
 
 				try {
-					const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+					const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&v=${currentVersion}`);
 					const rows = await res.json();
 					renderResults(rows);
 
@@ -1423,7 +1526,8 @@
 					} else {
 						const ref = `${row.book} ${row.chapter}:${row.verse}`;
 						if (ref === currentRef) div.classList.add("active");
-						div.innerHTML = `<span class="ref mono">${ref}</span><span>${row.text}</span>`;
+						const verPill = row.version ? `<span class="trans-pill mono">${row.version.toUpperCase()}</span>` : "";
+						div.innerHTML = `<span class="ref mono">${ref}</span>${verPill}<span>${row.text}</span>`;
 						div.dataset.type = "verse";
 						div._row = row;
 						div.onmouseenter = () => updatePreview(row);
@@ -1470,14 +1574,17 @@
 			}
 
 			function sendVerse(row) {
-				updatePreview(row);
-				updateLiveScreen(row);
+				const ver = row.version || currentVersion;
+				const verseData = { ...row, version: ver };
+				updatePreview(verseData);
+				updateLiveScreen(verseData);
 				sendWs({
 					channel: "scripture",
 					book: row.book,
 					chapter: row.chapter,
 					verse: row.verse,
 					text: row.text,
+					version: ver,
 				});
 
 				const items = resultsEl.querySelectorAll(".result");
@@ -1518,6 +1625,9 @@
 				} else if (e.altKey && (e.key === "s" || e.key === "S")) {
 					e.preventDefault();
 					window.location.href = "/song-control";
+				} else if (e.altKey && (e.key === "t" || e.key === "T")) {
+					e.preventDefault();
+					setVersion(currentVersion === "kjv" ? "amp" : "kjv");
 				} else if (e.altKey && (e.key === "q" || e.key === "Q")) {
 					e.preventDefault();
 					if (qrModal && qrModal.classList.contains("open")) {
@@ -1610,7 +1720,7 @@
 
 			async function loadDefault() {
 				try {
-					const res = await fetch(`/api/verse?book=Genesis&chapter=1&verse=1`);
+					const res = await fetch(`/api/verse?book=Genesis&chapter=1&verse=1&v=${currentVersion}`);
 					const row = await res.json();
 					if (row && row.text) {
 						updatePreview(row);
@@ -1619,6 +1729,7 @@
 				} catch (_) {}
 			}
 
+			setVersion(currentVersion, true);
 			checkNdi();
 			setInterval(checkNdi, 5000);
 			syncInitialOutputStatus();

@@ -25,7 +25,7 @@ import {
     getLastSong,
 } from "./ws";
 import { initNdi, getNdiStatus, shutdownNdi } from "./ndi";
-import type { CreateSongInput, BookSearchResult } from "./types";
+import type { CreateSongInput, BookSearchResult, BibleVersion } from "./types";
 import QRCode from "qrcode";
 
 const PREFERRED_PORT = Number(process.env.PORT) || 1000;
@@ -113,17 +113,19 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
     else if (path === "/api/search") {
         const queryParam = url.searchParams.get("q");
         const query = queryParam ? queryParam.trim() : "";
+        const versionParam = (url.searchParams.get("v") || url.searchParams.get("version") || "kjv").toLowerCase();
+        const version: BibleVersion = versionParam === "amp" || versionParam === "amplified" ? "amp" : "kjv";
 
         if (query.length < 1) {
             response = Response.json([]);
         } else {
             const ref = parseRef(query);
-            let chapterVerses = ref !== null ? getFullChapterVerses(ref.book, ref.chapter) : [];
+            let chapterVerses = ref !== null ? getFullChapterVerses(ref.book, ref.chapter, version) : [];
 
             if (chapterVerses.length > 0) {
                 response = Response.json(chapterVerses);
             } else {
-                const books = findBooks(query);
+                const books = findBooks(query, version);
                 if (books.length > 0) {
                     const result: BookSearchResult[] = books.map((b) => ({
                         type: "book",
@@ -131,7 +133,7 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
                     }));
                     response = Response.json(result);
                 } else {
-                    const searchResults = searchFuzzyVerses(query);
+                    const searchResults = searchFuzzyVerses(query, version);
                     response = Response.json(searchResults);
                 }
             }
@@ -142,6 +144,8 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
         const bookParam = url.searchParams.get("book");
         const chapterParam = url.searchParams.get("chapter");
         const verseParam = url.searchParams.get("verse");
+        const versionParam = (url.searchParams.get("v") || url.searchParams.get("version") || "kjv").toLowerCase();
+        const version: BibleVersion = versionParam === "amp" || versionParam === "amplified" ? "amp" : "kjv";
 
         if (bookParam === null || chapterParam === null || verseParam === null) {
             response = Response.json({});
@@ -152,7 +156,7 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
             if (isNaN(chapterNum) || isNaN(verseNum)) {
                 response = Response.json({});
             } else {
-                const verseRecord = getSingleVerse(bookParam, chapterNum, verseNum);
+                const verseRecord = getSingleVerse(bookParam, chapterNum, verseNum, version);
                 response = Response.json(verseRecord ?? {});
             }
         }

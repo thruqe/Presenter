@@ -178,6 +178,9 @@
 						const data = JSON.parse(e.data);
 						if (data.channel !== "scripture") return;
 
+						const verSuffix = data.version ? ` (${String(data.version).toUpperCase()})` : "";
+						const refText = `${data.book} ${data.chapter}:${data.verse}${verSuffix}`;
+
 						if (isNdi) {
 							if (data.type === "clear") {
 								wrap.classList.remove("visible");
@@ -188,7 +191,7 @@
 								return;
 							}
 							verseEl.textContent = data.text;
-							refEl.textContent = `${data.book} ${data.chapter}:${data.verse}`;
+							refEl.textContent = refText;
 							ensureFits();
 							wrap.classList.remove("hidden");
 							wrap.classList.add("visible");
@@ -207,7 +210,7 @@
 						wrap.classList.add("hidden");
 						setTimeout(() => {
 							verseEl.textContent = data.text;
-							refEl.textContent = `${data.book} ${data.chapter}:${data.verse}`;
+							refEl.textContent = refText;
 							ensureFits();
 							wrap.classList.remove("hidden");
 							wrap.classList.add("visible");

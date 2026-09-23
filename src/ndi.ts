@@ -503,9 +503,10 @@ function wrapText(text: string, maxCharsPerLine = 44): string[] {
 /**
  * Vector SVG fallback rendering for Scripture verse.
  */
-function renderScriptureFallback(book: string, chapter: number, verse: number, text: string): void {
+function renderScriptureFallback(book: string, chapter: number, verse: number, text: string, version?: string): void {
     const lines = wrapText(text, 46);
-    const ref = `${book} ${chapter}:${verse}`;
+    const verSuffix = version ? ` (${version.toUpperCase()})` : "";
+    const ref = `${book} ${chapter}:${verse}${verSuffix}`;
 
     const fontSize = lines.length > 5 ? 38 : lines.length > 3 ? 46 : 56;
     const lineHeight = fontSize * 1.36;
@@ -639,6 +640,7 @@ export function onScriptureUpdate(data: Record<string, unknown>): void {
     const chapter = typeof data.chapter === "number" ? data.chapter : 0;
     const verse = typeof data.verse === "number" ? data.verse : 0;
     const text = typeof data.text === "string" ? data.text : "";
+    const version = typeof data.version === "string" ? data.version : undefined;
 
     if (!text) return;
 
@@ -646,14 +648,14 @@ export function onScriptureUpdate(data: Record<string, unknown>): void {
         setTimeout(async () => {
             const ok = await captureScriptureScreenshot();
             if (!ok) {
-                renderScriptureFallback(book, chapter, verse, text);
+                renderScriptureFallback(book, chapter, verse, text, version);
             }
         }, 100);
         return;
     }
 
     // Vector fallback path
-    renderScriptureFallback(book, chapter, verse, text);
+    renderScriptureFallback(book, chapter, verse, text, version);
 }
 
 /**

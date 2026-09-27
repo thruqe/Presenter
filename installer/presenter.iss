@@ -76,6 +76,8 @@ Source: "..\db\*"; DestDir: "{app}\db"; Flags: ignoreversion recursesubdirs crea
 ; Documentation & License
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+; OBS Studio Integration Plugin
+Source: "..\obs-plugin\*"; DestDir: "{app}\obs-plugin"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"; Tasks: startmenuicon; Comment: "Launch Presenter Desktop Controller"

@@ -1,5 +1,7 @@
 import type { ServerWebSocket } from "bun";
-import { networkInterfaces } from "os";
+import { networkInterfaces, tmpdir } from "os";
+import { writeFileSync, unlinkSync, existsSync, readdirSync } from "fs";
+import { join } from "path";
 import { logServerStart, logRequest } from "./logger";
 import {
     parseRef,
@@ -108,6 +110,13 @@ async function handleFetch(req: Request, server: Bun.Server<unknown>): Promise<R
         response = Response.redirect("/#qr", 302);
     } else if (path.startsWith("/fonts/")) {
         response = new Response(Bun.file("public" + path));
+    } else if (path === "/obs/presenter_obs.py" || path === "/presenter_obs.py") {
+        response = new Response(Bun.file("obs-plugin/presenter_obs.py"), {
+            headers: {
+                "Content-Type": "text/x-python",
+                "Content-Disposition": 'attachment; filename="presenter_obs.py"',
+            },
+        });
     }
     // Scripture search endpoint
     else if (path === "/api/search") {
@@ -378,19 +387,86 @@ try {
 activePort = server.port ?? PREFERRED_PORT;
 lanIp = getLocalIp();
 
+/**
+ * Returns discovery file paths to write server connection metadata to,
+ * enabling OBS plugins and other local tools to auto-detect the active port.
+ */
+function getDiscoveryFilePaths(): string[] {
+    const paths = [
+        join(tmpdir(), "presenter_info.json"),
+        join(process.cwd(), ".presenter_info.json"),
+    ];
+
+    // If running under WSL, also write to the Windows user's Temp directory
+    // so OBS running natively on Windows can discover the server instantly.
+    try {
+        if (existsSync("/mnt/c/Users")) {
+            const userDirs = readdirSync("/mnt/c/Users");
+            for (const user of userDirs) {
+                if (user === "Public" || user === "Default" || user === "All Users") continue;
+                const tempDir = `/mnt/c/Users/${user}/AppData/Local/Temp`;
+                if (existsSync(tempDir)) {
+                    paths.push(join(tempDir, "presenter_info.json"));
+                }
+            }
+        }
+    } catch {}
+
+    return paths;
+}
+
+function writeDiscoveryInfo(port: number, ip: string | null) {
+    const payload = JSON.stringify({
+        port,
+        lanIp: ip,
+        pid: process.pid,
+        startedAt: Date.now(),
+        urls: {
+            scripture: `http://localhost:${port}/output`,
+            song: `http://localhost:${port}/song`,
+            control: `http://localhost:${port}/`,
+            songControl: `http://localhost:${port}/song-control`,
+        },
+    }, null, 2);
+
+    for (const p of getDiscoveryFilePaths()) {
+        try {
+            writeFileSync(p, payload, "utf-8");
+        } catch {}
+    }
+}
+
+function clearDiscoveryInfo() {
+    for (const p of getDiscoveryFilePaths()) {
+        try {
+            if (existsSync(p)) {
+                unlinkSync(p);
+            }
+        } catch {}
+    }
+}
+
+writeDiscoveryInfo(activePort, lanIp);
+
 // Initialize NDI video streaming engine for Scripture and Song outputs
 await initNdi(activePort);
 const ndiStatus = getNdiStatus();
 await logServerStart(activePort, lanIp, ndiStatus);
 
 process.on("SIGINT", () => {
+    clearDiscoveryInfo();
     shutdownNdi();
     process.exit(0);
 });
 
 process.on("SIGTERM", () => {
+    clearDiscoveryInfo();
     shutdownNdi();
     process.exit(0);
+});
+
+process.on("exit", () => {
+    clearDiscoveryInfo();
 });
 
 declare const self: Worker;

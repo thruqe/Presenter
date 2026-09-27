@@ -45,6 +45,7 @@ jobs:
           bun run build:server:windows
           bun run build:gui:windows
           bun run build:assets
+          bun run build:obs-plugin
 
       - name: Embed Windows PE Version Metadata & Icon
         run: bun run stamp:metadata
@@ -86,7 +87,7 @@ jobs:
       - name: Create Windows Portable Archive
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/presenter-gui-windows-x64.exe, dist/presenter-server-windows-x64.exe, dist/public, dist/db, assets/icon.ico, README.md, LICENSE -DestinationPath dist/Presenter-Windows-x64-Portable.zip
+          Compress-Archive -Path dist/presenter-gui-windows-x64.exe, dist/presenter-server-windows-x64.exe, dist/public, dist/db, dist/obs-plugin, assets/icon.ico, README.md, LICENSE -DestinationPath dist/Presenter-Windows-x64-Portable.zip
 
       - name: Upload Windows Installer Artifact
         uses: actions/upload-artifact@v4
@@ -95,6 +96,7 @@ jobs:
           path: |
             dist/Presenter-Setup-x64.exe
             dist/Presenter-Windows-x64-Portable.zip
+            dist/Presenter-OBS-Plugin.zip
 
   # =========================================================================
   # Linux: Server Binary, Tarball & Debian Package (.deb)
@@ -122,6 +124,7 @@ jobs:
         run: |
           bun run build:server:linux
           bun run build:assets
+          bun run build:obs-plugin
 
       - name: Package Linux Tarball & Debian (.deb)
         run: bun run scripts/package-linux.ts
@@ -133,6 +136,7 @@ jobs:
           path: |
             dist/Presenter-Linux-x64.tar.gz
             dist/Presenter-Linux-x64.deb
+            dist/Presenter-OBS-Plugin.tar.gz
 
   # =========================================================================
   # macOS: Server Binaries (Apple Silicon ARM64 & Intel x64)
@@ -161,16 +165,17 @@ jobs:
           bun run build:server:macos-arm64
           bun run build:server:macos
           bun run build:assets
+          bun run build:obs-plugin
 
       - name: Package macOS Archives
         run: |
           mkdir -p dist/mac-arm64 dist/mac-x64
           cp dist/presenter-server-macos-arm64 dist/mac-arm64/presenter
-          cp -r dist/public dist/db assets/icon.png README.md LICENSE dist/mac-arm64/
+          cp -r dist/public dist/db dist/obs-plugin assets/icon.png README.md LICENSE dist/mac-arm64/
           cd dist/mac-arm64 && zip -r ../Presenter-macOS-arm64.zip . && cd ../..
 
           cp dist/presenter-server-macos-x64 dist/mac-x64/presenter
-          cp -r dist/public dist/db assets/icon.png README.md LICENSE dist/mac-x64/
+          cp -r dist/public dist/db dist/obs-plugin assets/icon.png README.md LICENSE dist/mac-x64/
           cd dist/mac-x64 && zip -r ../Presenter-macOS-x64.zip . && cd ../..
 
       - name: Upload macOS Artifacts

@@ -61,6 +61,24 @@ Presenter broadcasts both live presentation channels over the local area network
 
 > *Note: If NDI libraries are not present on the host, the server gracefully logs a notice and continues serving standard web outputs without interruption.*
 
+## OBS Studio Browser Integration Plugin
+
+Presenter includes a native **OBS Studio script / plugin** (`obs-plugin/presenter_obs.py`) that eliminates manual browser source configuration:
+
+- **Auto-Port Detection**: Automatically detects whether Presenter is running on default port `1000`, Linux unprivileged fallback `8642`, or a custom `PORT`.
+- **Automatic Scene Generation**: Generates dedicated **`Presenter - Scripture`** and **`Presenter - Songs`** scenes configured with transparent 1080p browser overlays.
+- **Dynamic Port Re-Syncing**: If Presenter restarts on another port during service, the plugin automatically detects the new port and updates the browser sources in OBS without requiring manual re-entry.
+- **Zero-Flicker WebSocket Persistence**: Keeps the browser sources active in background so lyrics and scripture update instantly with zero delay.
+
+### Quick Setup in OBS
+1. In OBS Studio, open **Tools** > **Scripts**.
+2. On the **Scripts** tab, click **`+`** and select [presenter_obs.py](file:///home/thruqe/Presenter/obs-plugin/presenter_obs.py) (from `obs-plugin/presenter_obs.py`).
+3. Click **`🎬 Create / Update Presenter Scenes`**.
+4. Both **`Presenter - Scripture`** and **`Presenter - Songs`** scenes will be created and ready to use or overlay onto your live camera mixes.
+
+For complete setup instructions and troubleshooting, see the [OBS Plugin Documentation](file:///home/thruqe/Presenter/obs-plugin/README.md).
+
+
 ## Control Page Switcher & Dual Monitors
 
 Both control interfaces (`/` and `/song-control`) provide an integrated presentation workflow:

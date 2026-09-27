@@ -56,3 +56,13 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # User screenshots
 Screenshot*.png
+
+# Runtime discovery files
+.presenter_info.json
+presenter_info.json
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+

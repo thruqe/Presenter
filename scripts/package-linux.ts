@@ -16,6 +16,9 @@ chmodSync(path.join(pkgDir, "presenter-server-linux-x64"), 0o755);
 
 cpSync(path.join(distDir, "public"), path.join(pkgDir, "public"), { recursive: true });
 cpSync(path.join(distDir, "db"), path.join(pkgDir, "db"), { recursive: true });
+if (existsSync("obs-plugin")) {
+    cpSync("obs-plugin", path.join(pkgDir, "obs-plugin"), { recursive: true });
+}
 cpSync("assets/icon.png", path.join(pkgDir, "icon.png"));
 cpSync("README.md", path.join(pkgDir, "README.md"));
 cpSync("LICENSE", path.join(pkgDir, "LICENSE"));
